@@ -23,6 +23,11 @@ module.exports = (grunt) ->
         options:
           stdout: true
           failOnError: true
+      copyDocsToTopLevel:
+        command: "cp -r docs/_build/html/* ."
+        options:
+          stdout: true
+          failOnError: true
       openDocs:
         command: "open docs/_build/html/index.html"
       openCoverage:
@@ -55,17 +60,16 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks "grunt-shell"
 
   # Custom Tasks
-  grunt.registerTask "default", [
-    "watch:test"
-  ]
   grunt.registerTask "docs", [
-    "shell:openDocs"
     "shell:buildDocs"
-    "watch:docs"
+    "shell:copyDocsToTopLevel"
   ]
   grunt.registerTask "test", [
     "shell:test"
     "shell:coverageHTML"
     "shell:openCoverage"
     "watch:test"
+  ]
+  grunt.registerTask "default", [
+    "docs"
   ]
