@@ -30,16 +30,23 @@ class Node(object):
         at |t_{-1}|.
     """
 
-    def __init__(self, network, index, label=None):
+    # TODO document constructor args
+    def __init__(self, network, index, connectivity_matrix=None, label=None):
         # This node's parent network
         self.network = network
         # This node's index in the network's list of nodes
         self.index = index
         # Label for display
         self.label = label
-
+        # Connectivity matrix to determine inputs and outputs.
+        # This can be used to encode unidirectional cuts.
+        # If none was given, default to the network's connectivity matrix.
+        if connectivity_matrix is None:
+            self.connectivity_matrix = self.network.connectivity_matrix
+        else:
+            self.connectivity_matrix = connectivity_matrix
         # Get indices of the inputs
-        if self.network.connectivity_matrix is not None:
+        if self.connectivity_matrix is not None:
             # If a connectivity matrix was provided, store the indices of nodes
             # that connect to this node
             self._input_indices = np.array(

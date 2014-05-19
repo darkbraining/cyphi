@@ -6,6 +6,7 @@ from itertools import chain
 
 from cyphi.models import Mice
 from cyphi.utils import phi_eq
+import cyphi.compute as compute
 
 import example_networks
 
@@ -71,14 +72,12 @@ mice_parameter_string = "direction,expected"
 
 @pytest.mark.parametrize(mice_parameter_string, mice_scenarios)
 def test_find_mice(direction, expected):
-    result = subsystem.find_mice(direction, expected.mechanism,
-                                 subsystem.null_cut)
+    result = compute.find_mice(subsystem, direction, expected.mechanism)
 
     print("Expected:\n", expected)
     print("Result:\n", result)
 
-    assert (subsystem.find_mice(direction, expected.mechanism,
-                                subsystem.null_cut)
+    assert (compute.find_mice(subsystem, direction, expected.mechanism)
             == expected)
 
 
@@ -91,25 +90,25 @@ def test_find_mice_empty(s):
              mip=s._null_mip(direction, (), s.nodes),
              phi=0)
         for direction in directions]
-    assert all(s.find_mice(mice.direction, mice.mechanism, s.null_cut) == mice
+    assert all(compute.find_mice(s, mice.direction, mice.mechanism) == mice
                for mice in expected)
 
 
 # Test input validation
 def test_find_mice_validation_bad_direction(s):
-    mechanism = (s.nodes[0])
+    mechanism = tuple([s.nodes[0]])
     with pytest.raises(ValueError):
-        s.find_mice('doge', mechanism, s.null_cut)
+        compute.find_mice(s, 'doge', mechanism)
 
 
 def test_find_mice_validation_nonnode(s):
     with pytest.raises(ValueError):
-        s.find_mice('past', (0, 1), s.null_cut)
+        compute.find_mice(s, 'past', (0, 1))
 
 
 def test_find_mice_validation_noniterable(s):
     with pytest.raises(ValueError):
-        s.find_mice('past', 0, s.null_cut)
+        compute.find_mice(s, 'past', tuple([0]))
 
 # }}}
 # `phi_max` tests {{{
@@ -119,12 +118,12 @@ def test_find_mice_validation_noniterable(s):
 @pytest.mark.parametrize(mice_parameter_string, mice_scenarios)
 def test_core_cause_or_effect(direction, expected):
     if direction == 'past':
-        core_ce = subsystem.core_cause
+        core_ce = compute.core_cause
     elif direction == 'future':
-        core_ce = subsystem.core_effect
+        core_ce = compute.core_effect
     else:
         raise ValueError("Direction must be 'past' or 'future'")
-    assert core_ce(expected.mechanism) == expected
+    assert core_ce(subsystem, expected.mechanism) == expected
 
 
 phi_max_scenarios = [
@@ -135,7 +134,7 @@ phi_max_scenarios = [
 
 @pytest.mark.parametrize('mechanism, expected_phi_max', phi_max_scenarios)
 def test_phi_max(s, expected_phi_max, mechanism):
-    assert phi_eq(s.phi_max(mechanism), expected_phi_max)
+    assert phi_eq(compute.phi_max(s, mechanism), expected_phi_max)
 
 # }}}
 
