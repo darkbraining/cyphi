@@ -32,11 +32,11 @@ class Node(object):
 
     # TODO document constructor args
     def __init__(self, network, index, connectivity_matrix=None, label=None):
-        # This node's parent network
+        # This node's parent network.
         self.network = network
-        # This node's index in the network's list of nodes
+        # This node's index in the network's list of nodes.
         self.index = index
-        # Label for display
+        # Label for display.
         self.label = label
         # Connectivity matrix to determine inputs and outputs.
         # This can be used to encode unidirectional cuts.
@@ -45,10 +45,10 @@ class Node(object):
             self.connectivity_matrix = self.network.connectivity_matrix
         else:
             self.connectivity_matrix = connectivity_matrix
-        # Get indices of the inputs
+        # Get indices of the inputs.
         if self.connectivity_matrix is not None:
             # If a connectivity matrix was provided, store the indices of nodes
-            # that connect to this node
+            # that connect to this node.
             self._input_indices = np.array(
                 [i for i in range(self.network.size) if
                  self.network.connectivity_matrix[i][self.index]])
@@ -57,7 +57,7 @@ class Node(object):
                  self.network.connectivity_matrix[self.index][i]])
         else:
             # If no connectivity matrix was provided, assume all nodes connect
-            # to all nodes
+            # to all nodes.
             self._input_indices = tuple(range(self.network.size))
 
         # This will hold the indices of the nodes that correspond to
@@ -88,12 +88,12 @@ class Node(object):
                 self._dimension_labels.append(current_non_singleton_dim_index)
                 current_non_singleton_dim_index += 1
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # Store the generated TPM
+        # Store the generated TPM.
         self.tpm = np.array([tpm_off, tpm_on])
-        # Make it immutable (for hashing)
+        # Make it immutable (for hashing).
         self.tpm.flags.writeable = False
 
-        # Only compute hash once
+        # Only compute hash once.
         self._hash = hash((self.network, self.index))
 
         # Deferred properties:
