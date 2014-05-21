@@ -43,12 +43,12 @@ class Cut(namedtuple('Cut', ['severed', 'intact'])):
     """Represents a unidirectional cut.
 
     Attributes:
-        severed (tuple(Node)):
-            Connections from this group of nodes to those in ``intact`` are
-            severed.
+        severed (tuple(int)):
+            The indices of the severed nodes. Connections from this group of
+            nodes to those in ``intact`` are severed.
         intact (tuple(Node)):
-            Connections to this group of nodes from those in ``severed`` are
-            severed.
+            The indices of the intact nodes. Connections to this group of nodes
+            from those in ``severed`` are severed.
     """
 
     pass
@@ -235,8 +235,8 @@ class Mip(namedtuple('Mip', _mip_attributes)):
 
 # =============================================================================
 
-_mice_attributes = ['phi', 'direction', 'mechanism', 'purview', 'repertoire',
-                    'mip']
+_mice_attributes = ['phi', 'direction', 'mechanism', 'purview',
+                    'repertoire', 'mip']
 
 
 class Mice(namedtuple('Mice', _mice_attributes)):
@@ -256,11 +256,12 @@ class Mice(namedtuple('Mice', _mice_attributes)):
         direction (str):
             Either 'past' or 'future'. If 'past' ('future'), this
             represents a maximally irreducible cause (effect).
-        mechanism (list(Node)):
-            The mechanism for which the MICE is evaluated.
-        purview (list(Node)):
-            The purview over which this mechanism's |phi| is
-            maximal.
+        mechanism (list(int)):
+            The indices of the nodes in the mechanism for which the MICE is
+            evaluated.
+        purview (list(int)):
+            The indices of the nodes in the purview over which this mechanism's
+            |phi| is maximal.
         repertoire (np.ndarray):
             The unpartitioned repertoire of the mechanism over
             the purview.
@@ -302,8 +303,8 @@ class Concept(namedtuple('Concept', _concept_attributes)):
         phi (float):
             The size of the concept. This is the minimum of the |phi| values of
             the concept's core cause and core effect.
-        mechanism (tuple(Node)):
-            The mechanism that the concept consists of.
+        mechanism (tuple(int)):
+            The indices of the nodes in mechanism that the concept consists of.
         location (np.ndarray):
             The concept's location in concept space. The first dimension
             corresponds to cause and effect, and the remaining dimensions
