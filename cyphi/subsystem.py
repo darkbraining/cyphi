@@ -177,8 +177,7 @@ class Subsystem:
             conditioned_tpm = mechanism_node.tpm[node_state]
             # Collect the nodes that are not in the purview and have
             # connections to this node.
-            non_purview_inputs = (inputs &
-                                  (set(self.network.nodes) - set(purview)))
+            non_purview_inputs = (inputs & (self.all_nodes - set(purview)))
             # Fixed boundary-condition nodes are those that are outside this
             # subsystem, and are either not in the purview or have been severed
             # by a cut.
