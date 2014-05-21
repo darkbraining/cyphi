@@ -183,7 +183,7 @@ class Subsystem:
             boundary_inputs = non_purview_inputs - set(self.nodes)
             # We will marginalize-out nodes that are within the subsystem, but
             # are either not in the purview or severed by a cut.
-            marginal_inputs = non_purview_inputs - boundary_inputs
+            marginal_inputs = non_purview_inputs & set(self.nodes)
             # Condition the CPT on the past states of the nodes that are
             # treated as fixed boundary conditions by collapsing the dimensions
             # corresponding to the fixed nodes' indices so they contain only
