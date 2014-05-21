@@ -31,20 +31,24 @@ class Node(object):
     """
 
     # TODO document constructor args
-    def __init__(self, network, index, connectivity_matrix=None, label=None):
+    def __init__(self, network, index, context=None, label=None):
         # This node's parent network.
         self.network = network
         # This node's index in the network's list of nodes.
         self.index = index
         # Label for display.
         self.label = label
+        # The context of this node. May be None or a Subsystem. This is needed
+        # so that inputs point to Node objects where a subsystem's cut has been
+        # applied.
+        if context is None:
+            self.context = network
+        else:
+            self.context = context
         # Connectivity matrix to determine inputs and outputs.
         # This can be used to encode unidirectional cuts.
         # If none was given, default to the network's connectivity matrix.
-        if connectivity_matrix is None:
-            self.connectivity_matrix = self.network.connectivity_matrix
-        else:
-            self.connectivity_matrix = connectivity_matrix
+        self.connectivity_matrix = self.context.connectivity_matrix
         # Get indices of the inputs.
         if self.connectivity_matrix is not None:
             # If a connectivity matrix was provided, store the indices of nodes
@@ -114,8 +118,8 @@ class Node(object):
         if self._inputs is not None:
             return self._inputs
         else:
-            self._inputs = set([node for node in self.network.nodes if
-                                node.index in self._input_indices])
+            self._inputs = set(node for node in self.context.all_nodes if
+                               node.index in self._input_indices)
             return self._inputs
 
     @property
@@ -124,8 +128,8 @@ class Node(object):
         if self._outputs is not None:
             return self._outputs
         else:
-            self._outputs = set([node for node in self.network.nodes if
-                                 node.index in self._output_indices])
+            self._outputs = set(node for node in self.context.all_nodes if
+                                node.index in self._output_indices)
             return self._outputs
 
     @property

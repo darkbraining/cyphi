@@ -47,7 +47,10 @@ class Subsystem:
 
         # The network this subsystem belongs to.
         self.network = network
-
+        # Nodes outside this subsystem
+        self.external_nodes = set(tuple(network.nodes[i] for i in
+                                        range(self.network.size) if i not in
+                                        node_indices))
         # The null cut (leaves the system intact).
         self.null_cut = Cut(severed=(), intact=self.node_indices)
 
@@ -63,7 +66,10 @@ class Subsystem:
             # so their TPMs encode the cut
             cm = utils.apply_cut(self.cut, network.connectivity_matrix)
             self.connectivity_matrix = cm
-            self.nodes = tuple(Node(network, i, cm) for i in node_indices)
+            self.nodes = tuple(Node(network, i, context=self) for i in
+                               node_indices)
+
+        self.all_nodes = set(self.nodes) | self.external_nodes
 
         self.current_state = current_state
         self.past_state = past_state
