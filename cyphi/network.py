@@ -50,8 +50,10 @@ class Network:
             A matrix describing the network's connectivity.
             ``connectivity_matrix[i][j] == 1`` means that node
             ``i`` is connected to node ``j``.
-        nodes (list(Node)):
-            A list of nodes in the network.
+        nodes (tuple(Node)):
+            A tuple of nodes in the network.
+        all_nodes (list(Node)):
+            Alias for ``nodes``.
 
     """
 
@@ -93,6 +95,8 @@ class Network:
         # Generate the nodes
         self.nodes = tuple([Node(self, node_index) for node_index in
                             range(self.size)])
+        # Alias for nodes
+        self.all_nodes = self.nodes
 
         # TODO extend to nonbinary nodes
         self.num_states = 2 ** self.size
