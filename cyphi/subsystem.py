@@ -47,10 +47,6 @@ class Subsystem:
 
         # The network this subsystem belongs to.
         self.network = network
-        # Nodes outside this subsystem
-        self.external_nodes = set(tuple(network.nodes[i] for i in
-                                        range(self.network.size) if i not in
-                                        node_indices))
         # The null cut (leaves the system intact).
         self.null_cut = Cut(severed=(), intact=self.node_indices)
 
@@ -68,6 +64,9 @@ class Subsystem:
             self.connectivity_matrix = cm
             self.nodes = tuple(Node(network, i, context=self) for i in
                                node_indices)
+
+        # Nodes outside this subsystem.
+        self.external_nodes = set(network.nodes) - set(self.nodes)
 
         self.all_nodes = set(self.nodes) | self.external_nodes
 
