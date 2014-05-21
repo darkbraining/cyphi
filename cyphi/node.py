@@ -51,10 +51,10 @@ class Node(object):
             # that connect to this node.
             self._input_indices = np.array(
                 [i for i in range(self.network.size) if
-                 self.network.connectivity_matrix[i][self.index]])
+                 self.connectivity_matrix[i][self.index]])
             self._output_indices = np.array(
                 [i for i in range(self.network.size) if
-                 self.network.connectivity_matrix[self.index][i]])
+                 self.connectivity_matrix[self.index][i]])
         else:
             # If no connectivity matrix was provided, assume all nodes connect
             # to all nodes.
