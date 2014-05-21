@@ -41,9 +41,8 @@ def nodelist(nodes, name):
     if not all(isinstance(node, Node) for node in nodes):
         raise ValueError("{} must consist only of Nodes (perhaps you "
                          "gave a node's index instead?)".format(name))
-    if not isinstance(nodes, tuple):
-        nodes = tuple(nodes)
-    return nodes
+    # Cast to a tuple
+    return tuple(nodes)
 
 
 def cut(subsystem, partition):
