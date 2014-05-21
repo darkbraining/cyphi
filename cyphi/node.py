@@ -76,13 +76,14 @@ class Node(object):
         # Only compute hash once
         self._hash = hash((self.network, self.index))
 
-        # Deferred properties
+        # Deferred properties:
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # ``inputs`` and ``marbl`` must be properties because at the time of
-        # node creation, the network doesn't have a list of Node objects yet,
-        # only a size (and thus a range of node indices). So, we defer
-        # construction until the properties are needed.
+        # ``inputs``, ``outputs``, and ``marbl`` must be properties because at
+        # the time of node creation, the network doesn't have a list of Node
+        # objects yet, only a size (and thus a range of node indices). So, we
+        # defer construction until the properties are needed.
         self._inputs = None
+        self._outputs = None
         self._marbl = None
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -97,13 +98,29 @@ class Node(object):
             return self._inputs
 
     @property
+    def outputs(self):
+        """The set of nodes this node has connections to."""
+        if self._outputs is not None:
+            return self._outputs
+        else:
+            self._outputs = set(node for node in self.network.nodes if
+                                node.index in self._output_indices)
+            return self._outputs
+
+    @property
     def marbl(self):
         """The normalized representation of this node's Markov blanket."""
         if self._marbl is not None:
             return self._marbl
         else:
+            # We take only the part of the TPM giving the probability the node
+            # is on
             # TODO extend to nonbinary nodes
-            self._marbl = Marbl(self.tpm[1], [n.tpm[1] for n in self.inputs])
+            augmented_child_tpms = [
+                [child._dimension_labels[self.index], child.tpm[1].squeeze()]
+                for child in self.outputs
+            ]
+            self._marbl = Marbl(self.tpm[1], augmented_child_tpms)
             return self._marbl
 
     def __repr__(self):
