@@ -50,7 +50,8 @@ class Subsystem:
         # The null cut (leaves the system intact).
         self.null_cut = Cut(severed=(), intact=self.node_indices)
 
-        # Get or generate the nodes in this subsystem.
+        # Generate the nodes in this subsystem.
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         if cut is None:
             self.nodes = tuple(network.nodes[i] for i in node_indices)
             self.connectivity_matrix = network.connectivity_matrix
