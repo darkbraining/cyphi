@@ -607,7 +607,7 @@ class Subsystem:
         For information on the indices used in the returned array, see
         :ref:concept-space."""
         return Concept(
-            mechanism=Mechanism(),
+            mechanism=(),
             location=np.array([
                 # Unconstrained cause repertoire
                 self.cause_repertoire((), self.nodes),
@@ -617,3 +617,5 @@ class Subsystem:
             phi=0,
             cause=None,
             effect=None)
+
+
