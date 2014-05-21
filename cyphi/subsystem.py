@@ -300,12 +300,11 @@ class Subsystem:
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # Collect all nodes with inputs to any purview node.
         inputs_to_purview = set.union(*[set(node.inputs) for node in purview])
-        # Collect nodes outside this subsystem.
-        external_nodes = set(self.network.nodes) - set(self.nodes)
         # Fixed boundary condition nodes are those that are outside this
         # subsystem or in the mechanism, and have been severed by a
         # cut.
-        boundary_inputs = inputs_to_purview & (set(mechanism) | external_nodes)
+        boundary_inputs = inputs_to_purview & (set(mechanism) |
+                                               self.external_nodes)
         # Initialize the conditioning indices, taking the slices as singleton
         # lists-of-lists for later flattening with `chain`.
         # TODO! are the external nodes really the ones outside this
