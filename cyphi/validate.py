@@ -56,11 +56,6 @@ def cut(subsystem, partition):
         intact = (intact,)
     else:
         intact = tuple(intact)
-    # Validate.
-    if not (len(subsystem.nodes) == len(severed + intact) and
-            set(subsystem.nodes) == set(severed + intact)):
-        raise ValueError("Each node in the subsystem must appear exactly once "
-                         "in the partition.")
     return Cut(severed, intact)
 
 
