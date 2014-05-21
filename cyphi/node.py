@@ -52,21 +52,41 @@ class Node(object):
             self._input_indices = np.array(
                 [i for i in range(self.network.size) if
                  self.network.connectivity_matrix[i][self.index]])
+            self._output_indices = np.array(
+                [i for i in range(self.network.size) if
+                 self.network.connectivity_matrix[self.index][i]])
         else:
             # If no connectivity matrix was provided, assume all nodes connect
             # to all nodes
             self._input_indices = tuple(range(self.network.size))
 
-        # Generate the node's TPM
+        # This will hold the indices of the nodes that correspond to
+        # non-singleton dimensions of this node's on-TPM. It maps any network
+        # node index to the corresponding dimension of this node's TPM with
+        # singleton dimensions removed. We need this for creating this node's
+        # Marbl.
+        self._dimension_labels = []
+        # Generate the node's TPM.
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         tpm_on = self.network.tpm[..., self.index]
         tpm_off = 1 - tpm_on
         # Marginalize-out non-input nodes.
+        current_non_singleton_dim_index = 0
         for index in range(self.network.size):
             if index not in self._input_indices:
+                # Record that this node index doesn't correspond to any
+                # dimension in this node's squeezed TPM.
+                self._dimension_labels.append(None)
                 # TODO extend to nonbinary nodes
                 tpm_on = tpm_on.sum(index, keepdims=True) / 2
                 tpm_off = tpm_off.sum(index, keepdims=True) / 2
+            else:
+                # The current index will correspond to a dimension in this
+                # node's squeezed TPM, so we map it to the index of the
+                # corresponding dimension and increment the corresponding index
+                # for the next one.
+                self._dimension_labels.append(current_non_singleton_dim_index)
+                current_non_singleton_dim_index += 1
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # Store the generated TPM
         self.tpm = np.array([tpm_off, tpm_on])
