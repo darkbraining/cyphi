@@ -59,6 +59,7 @@ class Node(object):
             # If no connectivity matrix was provided, assume all nodes connect
             # to all nodes.
             self._input_indices = tuple(range(self.network.size))
+            self._output_indices = self._input_indices
 
         # This will hold the indices of the nodes that correspond to
         # non-singleton dimensions of this node's on-TPM. It maps any network
