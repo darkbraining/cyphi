@@ -37,10 +37,16 @@ class Subsystem:
             current_state (tuple): The current state of this subsystem.
             past_state (tuple): The past state of this subsystem.
             network (Network): The network the subsystem is part of.
+
+        Keyword Args:
+            cut (Cut): Optionally apply a unidirectional cut to this subsystem.
         """
         # Remove duplicates, sort, and cast to tuple for hashing
         node_indices = tuple(sorted(list(set(node_indices))))
         self.node_indices = node_indices
+
+        # The network this subsystem belongs to.
+        self.network = network
 
         # The null cut (leaves the system intact).
         self.null_cut = Cut(severed=(), intact=self.node_indices)
@@ -56,17 +62,11 @@ class Subsystem:
             # Create new nodes with the cut applied to the connectivity matrix,
             # so their TPMs encode the cut
             cm = utils.apply_cut(self.cut, network.connectivity_matrix)
-            self.nodes = tuple(Node(network, i, cm) for i in node_indices)
             self.connectivity_matrix = cm
+            self.nodes = tuple(Node(network, i, cm) for i in node_indices)
 
         self.current_state = current_state
         self.past_state = past_state
-
-        # The network this subsystem belongs to.
-        self.network = network
-
-        # A cache for keeping core causes and effects that can be reused later
-        self._mice_cache = dict()
 
         # Hash doesn't include cut
         self._hash = hash((self.node_indices,
@@ -77,7 +77,8 @@ class Subsystem:
     def __repr__(self):
         return "Subsystem(" + ", ".join([repr(self.nodes),
                                          repr(self.current_state),
-                                         repr(self.past_state)]) + ")"
+                                         repr(self.past_state),
+                                         repr(self.cut)]) + ")"
 
     def __str__(self):
         return repr(self)
@@ -266,7 +267,6 @@ class Subsystem:
             # the shape is the CPT indexed by network state, so that the
             # overall CPT can be broadcast over the `accumulated_cjd` and then
             # later conditioned by indexing.
-
             inputs = set(purview_node.inputs)
             # TODO extend to nonbinary nodes
             # Rotate the dimensions so the first dimension is the last
