@@ -162,7 +162,7 @@ class Subsystem:
         # (conditioned on the whole mechanism's state). After normalization,
         # this is the cause repertoire. Normalization happens after this loop.
         for mechanism_node in mechanism:
-            inputs = set(mechanism_node.inputs)
+            inputs = mechanism_node.inputs
 
             # TODO extend to nonbinary nodes
             # We're conditioning on this node's state, so take the probability
@@ -267,7 +267,7 @@ class Subsystem:
             # the shape is the CPT indexed by network state, so that the
             # overall CPT can be broadcast over the `accumulated_cjd` and then
             # later conditioned by indexing.
-            inputs = set(purview_node.inputs)
+            inputs = purview_node.inputs
             # TODO extend to nonbinary nodes
             # Rotate the dimensions so the first dimension is the last
             tpm = purview_node.tpm
