@@ -617,5 +617,3 @@ class Subsystem:
             phi=0,
             cause=None,
             effect=None)
-
-
