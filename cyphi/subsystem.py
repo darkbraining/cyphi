@@ -17,7 +17,7 @@ from . import options, validate
 from . import utils
 from .utils import hamming_emd, max_entropy_distribution, bipartition
 from .node import Node
-from .models import Mechanism, Cut, Mip, Part, Concept
+from .models import Cut, Mip, Part, Concept
 
 
 # TODO! go through docs and make sure to say when things can be None
