@@ -23,27 +23,28 @@ from .constants import DIRECTIONS, PAST, FUTURE, MAXMEM, memory
 from .lru_cache import lru_cache
 
 
+# XXX: Remove these
 _mice_cache = {}
 
 
-def _get_mice_key(subsystem, direction, mechanism):
+def _get_mice_key(subsystem, direction, mechanism_indices):
     # We use the hash of the subsystem, the direction, and the mechanism
     # indices as the cache key
-    return (hash(subsystem), direction, tuple(n.index for n in mechanism))
+    return (hash(subsystem), direction, mechanism_indices)
 
 
-def _cache_mice(subsystem, direction, mechanism, mice):
-    key = _get_mice_key(subsystem, direction, mechanism)
+def _cache_mice(subsystem, direction, mechanism_indices, mice):
+    key = _get_mice_key(subsystem, direction, mechanism_indices)
     if key not in _mice_cache:
         _mice_cache[key] = mice
 
 
-def _get_cached_mice(subsystem, direction, mechanism):
+def _get_cached_mice(subsystem, direction, mechanism_indices):
     """Return a cached MICE if there is one and the cut doesn't affect it.
 
     Return False otherwise."""
     # Hash of subsystem doesn't include cut
-    key = _get_mice_key(subsystem, direction, mechanism)
+    key = _get_mice_key(subsystem, direction, mechanism_indices)
     if key in _mice_cache:
         cached = _mice_cache[key]
         # If we've already calculated the core cause for this mechanism
@@ -51,30 +52,28 @@ def _get_cached_mice(subsystem, direction, mechanism):
         #   - all mechanism nodes are severed, or
         #   - all the cached cause's purview nodes are intact.
         if (direction == DIRECTIONS[PAST] and
-            (all([nodes in subsystem.cut.severed for nodes in mechanism]) or
-             all([nodes in subsystem.cut.intact for nodes in
-                  cached.purview]))):
+            (all([i in subsystem.cut.severed for i in mechanism_indices]) or
+             all([i in subsystem.cut.intact for i in cached.purview]))):
             return cached
         # If we've already calculated the core cause for this mechanism
         # with no cut, then we don't need to recalculate it with the cut if
         #   - all mechanism nodes are intact, or
         #   - all the cached effect's purview nodes are severed.
         if (direction == DIRECTIONS[FUTURE] and
-            (all([nodes in subsystem.cut.intact for nodes in mechanism]) or
-             all([nodes in subsystem.cut.severed for nodes in
-                  cached.purview]))):
+            (all([i in subsystem.cut.intact for i in mechanism_indices]) or
+             all([i in subsystem.cut.severed for i in cached.purview]))):
             return cached
     return False
 
 
 # TODO update docs
-def find_mice(subsystem, direction, mechanism):
+def find_mice(subsystem, direction, mechanism_indices):
     """Return the maximally irreducible cause or effect for a mechanism.
 
     Args:
         direction (str): The temporal direction, specifying cause or
             effect.
-        mechanism (tuple(Node)): The mechanism to be tested for
+        mechanism (tuple(int)): The indices of the nodes to be tested for
             irreducibility.
 
     Returns:
@@ -90,11 +89,18 @@ def find_mice(subsystem, direction, mechanism):
         of them.
     """
     # Return a cached MICE if we were given a cache and there's a hit
-    cached_mice = _get_cached_mice(subsystem, direction, mechanism)
+    cached_mice = _get_cached_mice(subsystem, direction, mechanism_indices)
     if cached_mice:
         return cached_mice
 
+    # Get the actual nodes
+    mechanism = tuple(n for n in subsystem.nodes if n.index in
+                      mechanism_indices)
+
+    # Validation
     validate.direction(direction)
+    mechanism = validate.nodelist(mechanism, 'Mechanism')
+
     # Set defaults for a reducible MICE
     mip_max = None
     phi_max = float('-inf')
@@ -104,10 +110,13 @@ def find_mice(subsystem, direction, mechanism):
     purviews = utils.powerset(subsystem.nodes)
 
     def not_trivially_reducible(purview):
+        purview_indices = tuple(n.index for n in purview)
         if direction == DIRECTIONS[PAST]:
-            return subsystem._all_connect_to_any(purview, mechanism)
+            return subsystem._all_connect_to_any(purview_indices,
+                                                 mechanism_indices)
         elif direction == DIRECTIONS[FUTURE]:
-            return subsystem._all_connect_to_any(mechanism, purview)
+            return subsystem._all_connect_to_any(mechanism_indices,
+                                                 purview_indices)
 
     # Filter out trivially reducible purviews if a connectivity matrix was
     # provided
@@ -132,41 +141,41 @@ def find_mice(subsystem, direction, mechanism):
         phi_max = 0
     # Build the Mice.
     mice = Mice(direction=direction,
-                mechanism=mechanism,
-                purview=maximal_purview,
+                mechanism=mechanism_indices,
+                purview=tuple(n.index for n in purview),
                 repertoire=maximal_repertoire,
                 mip=mip_max,
                 phi=phi_max)
     # Cache it if it's not already in there.
-    _cache_mice(subsystem, direction, mechanism, mice)
+    _cache_mice(subsystem, direction, mechanism_indices, mice)
     return mice
 
 
-def core_cause(subsystem, mechanism):
+def core_cause(subsystem, mechanism_indices):
     """Returns the core cause repertoire of a mechanism.
 
     Alias for :func:`find_mice` with ``direction`` set to |past|."""
-    return find_mice(subsystem, 'past', mechanism)
+    return find_mice(subsystem, 'past', mechanism_indices)
 
 
 # TODO! don't use these internally
-def core_effect(subsystem, mechanism):
+def core_effect(subsystem, mechanism_indices):
     """Returns the core effect repertoire of a mechanism.
 
     Alias for :func:`find_mice` with ``direction`` set to |past|."""
-    return find_mice(subsystem, 'future', mechanism)
+    return find_mice(subsystem, 'future', mechanism_indices)
 
 
-def phi_max(subsystem, mechanism):
+def phi_max(subsystem, mechanism_indices):
     """Return the |phi_max| of a mechanism.
 
     This is the maximum of |phi| taken over all possible purviews."""
-    return min(core_cause(subsystem, mechanism).phi,
-               core_effect(subsystem, mechanism).phi)
+    return min(core_cause(subsystem, mechanism_indices).phi,
+               core_effect(subsystem, mechanism_indices).phi)
 
 
 # XXX: re-cache this after implementing builtin-cuts
-def _concept(subsystem, mechanism, hash):
+def _concept(subsystem, mechanism_indices, hash):
     """Returns the concept specified by a mechanism.
 
     The output is "persistently cached" (saved to the disk for later access to
@@ -180,18 +189,20 @@ def _concept(subsystem, mechanism, hash):
     # or has no outputs to the subsystem, then the mechanism is necessarily
     # reducible and cannot be a concept (since removing that node would
     # make no difference to at least one of the MICEs).
-    if not (subsystem._all_connect_to_any(mechanism, subsystem.nodes) and
-            subsystem._any_connect_to_all(subsystem.nodes, mechanism)):
+    if not (subsystem._all_connect_to_any(mechanism_indices,
+                                          subsystem.node_indices) and
+            subsystem._any_connect_to_all(subsystem.node_indices,
+                                          mechanism_indices)):
         return None
 
-    past_mice = core_cause(subsystem, mechanism)
-    future_mice = core_effect(subsystem, mechanism)
+    past_mice = core_cause(subsystem, mechanism_indices)
+    future_mice = core_effect(subsystem, mechanism_indices)
     phi = min(past_mice.phi, future_mice.phi)
 
     if phi < options.EPSILON:
         return None
     return Concept(
-        mechanism=mechanism,
+        mechanism=mechanism_indices,
         location=np.array([
             subsystem.expand_cause_repertoire(past_mice.mechanism,
                                               past_mice.purview,
@@ -205,14 +216,17 @@ def _concept(subsystem, mechanism, hash):
 
 
 @functools.wraps(_concept)
-def concept(subsystem, mechanism):
-    return _concept(subsystem, mechanism, hash(mechanism))
+def concept(subsystem, mechanism_indices):
+    # Form a Mechanism for hashing based only on causal properties
+    mechanism = Mechanism(n for n in subsystem.nodes if n.index in
+                          mechanism_indices)
+    return _concept(subsystem, mechanism_indices, hash(mechanism))
 
 
 def constellation(subsystem):
     """Return the conceptual structure of this subsystem."""
-    concepts = [concept(subsystem, Mechanism(subset)) for subset in
-                utils.powerset(subsystem.nodes)]
+    concepts = [concept(subsystem, subset) for subset in
+                utils.powerset(subsystem.node_indices)]
     # Filter out non-concepts
     return tuple(filter(None, concepts))
 
@@ -314,7 +328,7 @@ def _single_node_mip(subsystem):
         # TODO return the actual concept
         return BigMip(
             phi=0.5,
-            cut=Cut(subsystem.nodes, subsystem.nodes),
+            cut=Cut(subsystem.node_indices, subsystem.node_indices),
             unpartitioned_constellation=None,
             partitioned_constellation=None,
             subsystem=subsystem)
