@@ -123,6 +123,9 @@ class Subsystem:
     def __hash__(self):
         return self._hash
 
+    def indices2nodes(self, indices):
+        return tuple(self.all_nodes[i] for i in indices)
+
     @lru_cache(maxmem=MAXMEM)
     def cause_repertoire(self, mechanism, purview):
         """Return the cause repertoire of a mechanism over a purview.

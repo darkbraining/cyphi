@@ -132,6 +132,9 @@ class Network:
     def __hash__(self):
         return self._hash
 
+    def indices2nodes(self, indices):
+        return tuple(self.all_nodes[i] for i in indices)
+
     def subsystems(self):
         """Return a generator of all possible subsystems of this network.
 

@@ -110,7 +110,7 @@ def find_mice(subsystem, direction, mechanism_indices):
     purviews = utils.powerset(subsystem.nodes)
 
     def not_trivially_reducible(purview):
-        purview_indices = tuple(n.index for n in purview)
+        purview_indices = utils.nodes2indices(purview)
         if direction == DIRECTIONS[PAST]:
             return subsystem._all_connect_to_any(purview_indices,
                                                  mechanism_indices)
@@ -142,7 +142,7 @@ def find_mice(subsystem, direction, mechanism_indices):
     # Build the Mice.
     mice = Mice(direction=direction,
                 mechanism=mechanism_indices,
-                purview=tuple(n.index for n in purview),
+                purview=utils.nodes2indices(maximal_purview),
                 repertoire=maximal_repertoire,
                 mip=mip_max,
                 phi=phi_max)
