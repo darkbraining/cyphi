@@ -5,7 +5,7 @@ import pytest
 from itertools import chain
 
 from cyphi.models import Mice
-from cyphi.utils import phi_eq
+from cyphi.utils import phi_eq, nodes2indices
 import cyphi.compute as compute
 
 import example_networks
@@ -36,25 +36,29 @@ expected_purview_indices = {
 }
 expected_purviews = {
     direction: {
-        indices2nodes(mechanism): indices2nodes(purview) for mechanism, purview
-        in expected_purview_indices[direction].items()
+        mechanism_indices: indices2nodes(purview_indices) for
+        mechanism_indices, purview_indices in
+        expected_purview_indices[direction].items()
     } for direction in directions
 }
 expected_mips = {
     direction: {
-        mechanism: subsystem.find_mip(direction, mechanism, purview) for
-        mechanism, purview in expected_purviews[direction].items()
+        mechanism_indices: subsystem.find_mip(direction,
+                                              indices2nodes(mechanism_indices),
+                                              purview)
+        for mechanism_indices, purview in expected_purviews[direction].items()
     } for direction in directions
 }
+
 expected_mice = {
     direction: [
         Mice(direction=direction,
-             mechanism=mechanism,
-             purview=expected_purviews[direction][mechanism],
+             mechanism=mechanism_indices,
+             purview=expected_purview_indices[direction][mechanism_indices],
              repertoire=mip.unpartitioned_repertoire,
              mip=mip,
              phi=mip.phi)
-        for mechanism, mip in expected_mips[direction].items()
+        for mechanism_indices, mip in expected_mips[direction].items()
     ] for direction in directions
 }
 
@@ -72,31 +76,33 @@ mice_parameter_string = "direction,expected"
 
 @pytest.mark.parametrize(mice_parameter_string, mice_scenarios)
 def test_find_mice(direction, expected):
-    result = compute.find_mice(subsystem, direction, expected.mechanism)
+    result = compute.find_mice(subsystem, direction,
+                               expected.mechanism)
 
-    print("Expected:\n", expected)
-    print("Result:\n", result)
+    print('Expected:\n', expected, '\n')
+    print('Result:\n', result)
 
-    assert (compute.find_mice(subsystem, direction, expected.mechanism)
-            == expected)
+    assert (compute.find_mice(subsystem, direction, expected.mechanism) ==
+            expected)
 
 
 def test_find_mice_empty(s):
     expected = [
         Mice(direction=direction,
              mechanism=(),
-             purview=s.nodes,
+             purview=nodes2indices(s.nodes),
              repertoire=None,
              mip=s._null_mip(direction, (), s.nodes),
              phi=0)
         for direction in directions]
-    assert all(compute.find_mice(s, mice.direction, mice.mechanism) == mice
-               for mice in expected)
+    assert all(compute.find_mice(s, mice.direction,
+                                 mice.mechanism) == mice for
+               mice in expected)
 
 
 # Test input validation
 def test_find_mice_validation_bad_direction(s):
-    mechanism = tuple([s.nodes[0]])
+    mechanism = tuple([0])
     with pytest.raises(ValueError):
         compute.find_mice(s, 'doge', mechanism)
 
@@ -123,7 +129,10 @@ def test_core_cause_or_effect(direction, expected):
         core_ce = compute.core_effect
     else:
         raise ValueError("Direction must be 'past' or 'future'")
-    assert core_ce(subsystem, expected.mechanism) == expected
+    answer = core_ce(subsystem, expected.mechanism)
+    print('Answer:\n', answer, '\n')
+    print('Expected:\n', expected)
+    assert answer == expected
 
 
 phi_max_scenarios = [
