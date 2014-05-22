@@ -92,23 +92,17 @@ def find_mice(subsystem, direction, mechanism_indices):
     cached_mice = _get_cached_mice(subsystem, direction, mechanism_indices)
     if cached_mice:
         return cached_mice
-
-    # Get the actual nodes
+    # Get the actual nodes.
     mechanism = tuple(n for n in subsystem.nodes if n.index in
                       mechanism_indices)
-
-    # Validation
+    # Validation.
     validate.direction(direction)
     mechanism = validate.nodelist(mechanism, 'Mechanism')
-
-    # Set defaults for a reducible MICE
-    mip_max = None
-    phi_max = float('-inf')
-    maximal_purview = None
-    maximal_repertoire = None
-
+    # Generate all possible purviews.
     purviews = utils.powerset(subsystem.nodes)
 
+    # Filter out trivially reducible purviews if a connectivity matrix was
+    # provided.
     def not_trivially_reducible(purview):
         purview_indices = utils.nodes2indices(purview)
         if direction == DIRECTIONS[PAST]:
@@ -117,35 +111,18 @@ def find_mice(subsystem, direction, mechanism_indices):
         elif direction == DIRECTIONS[FUTURE]:
             return subsystem._all_connect_to_any(mechanism_indices,
                                                  purview_indices)
-
-    # Filter out trivially reducible purviews if a connectivity matrix was
-    # provided
     purviews = filter(not_trivially_reducible, purviews)
 
-    # Loop over filtered purviews in this candidate set and find the
-    # purview over which phi is maximal.
-    for purview in purviews:
-        mip = subsystem.find_mip(direction, mechanism, purview)
-        if mip:
-            # Take the purview with higher phi, or if phi is equal, take
-            # the larger one (exclusion principle).
-            if mip.phi > phi_max or (utils.phi_eq(mip.phi, phi_max) and
-                                     len(purview) > len(maximal_purview)):
-                mip_max = mip
-                phi_max = mip.phi
-                maximal_purview = purview
-                maximal_repertoire = mip.unpartitioned_repertoire
-
-    # If there was no MIP, then phi is zero.
-    if phi_max == float('-inf'):
-        phi_max = 0
-    # Build the Mice.
-    mice = Mice(direction=direction,
+    # Find the maximal MIP.
+    mip = max(subsystem.find_mip(direction, mechanism, purview) for purview
+              in purviews)
+    # Build the corresponding MICE.
+    mice = Mice(direction=mip.direction,
                 mechanism=mechanism_indices,
-                purview=utils.nodes2indices(maximal_purview),
-                repertoire=maximal_repertoire,
-                mip=mip_max,
-                phi=phi_max)
+                purview=utils.nodes2indices(mip.purview),
+                repertoire=mip.unpartitioned_repertoire,
+                mip=mip,
+                phi=mip.phi)
     # Cache it if it's not already in there.
     _cache_mice(subsystem, direction, mechanism_indices, mice)
     return mice
