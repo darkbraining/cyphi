@@ -29,7 +29,6 @@
 
   
     <link rel="top" title="CyPhi v0.0.2 documentation" href="#"/>
-  <script>document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')</script>
   <link rel="stylesheet" href="_static/custom.css">
 
 
@@ -155,7 +154,8 @@ subsystems.</p>
 <dl class="function">
 <dt id="cyphi.compute.concept">
 <tt class="descclassname">cyphi.compute.</tt><tt class="descname">concept</tt><big>(</big><em>subsystem</em>, <em>mechanism</em>, <em>hash</em>, <em>cut</em><big>)</big><a class="headerlink" href="#cyphi.compute.concept" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the concept specified by a mechanism.</p>
+<dd><p>Memoized version of _concept(subsystem, mechanism, hash, cut)</p>
+<p>Returns the concept specified by a mechanism.</p>
 <p>The output is &#8220;persistently cached&#8221; (saved to the disk for later access to
 avoid recomputation).
 Cache the output using the normal form of the multiset of the mechanism
@@ -207,8 +207,8 @@ concept.</p>
 
 <dl class="function">
 <dt id="cyphi.compute.big_mip">
-<tt class="descclassname">cyphi.compute.</tt><tt class="descname">big_mip</tt><big>(</big><em>subset</em>, <em>cache_key</em><big>)</big><a class="headerlink" href="#cyphi.compute.big_mip" title="Permalink to this definition">¶</a></dt>
-<dd><p>Memoized version of __bbiigg__mmiipp(subset, cache_key)</p>
+<tt class="descclassname">cyphi.compute.</tt><tt class="descname">big_mip</tt><big>(</big><em>subsystem</em>, <em>cache_key</em><big>)</big><a class="headerlink" href="#cyphi.compute.big_mip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Memoized version of _big_mip(subsystem, cache_key)</p>
 <p>Return the MIP for a subsystem.</p>
 </dd></dl>
 
@@ -337,7 +337,7 @@ difference to the mechanism&#8217;s repertoire.</p>
 <dt id="cyphi.models.Mip.unpartitioned_repertoire">
 <tt class="descname">unpartitioned_repertoire</tt><em class="property"> np.ndarray</em><a class="headerlink" href="#cyphi.models.Mip.unpartitioned_repertoire" title="Permalink to this definition">¶</a></dt>
 <dd><p>The unpartitioned repertoire of
-the mechanism.</p>
+the mecanism.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -499,7 +499,7 @@ subsystem is cut.</p>
 <p>Represents a candidate set for <span class="math">\(\varphi\)</span> calculation.</p>
 <dl class="class">
 <dt id="cyphi.subsystem.Subsystem">
-<em class="property">class </em><tt class="descclassname">cyphi.subsystem.</tt><tt class="descname">Subsystem</tt><big>(</big><em>node_indices</em>, <em>current_state</em>, <em>past_state</em>, <em>network</em>, <em>cut=None</em><big>)</big><a class="headerlink" href="#cyphi.subsystem.Subsystem" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">cyphi.subsystem.</tt><tt class="descname">Subsystem</tt><big>(</big><em>node_indices</em>, <em>current_state</em>, <em>past_state</em>, <em>network</em><big>)</big><a class="headerlink" href="#cyphi.subsystem.Subsystem" title="Permalink to this definition">¶</a></dt>
 <dd><p>A set of nodes in a network.</p>
 <p>Args:
 nodes (tuple(int)): A sequence of indices of the nodes in this</p>
@@ -825,7 +825,7 @@ past state.</p>
 </div>
 <span class="target" id="module-cyphi.node"></span><dl class="class">
 <dt id="cyphi.node.Node">
-<em class="property">class </em><tt class="descclassname">cyphi.node.</tt><tt class="descname">Node</tt><big>(</big><em>network</em>, <em>index</em>, <em>connectivity_matrix=None</em>, <em>label=None</em><big>)</big><a class="headerlink" href="#cyphi.node.Node" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">cyphi.node.</tt><tt class="descname">Node</tt><big>(</big><em>network</em>, <em>index</em>, <em>label=None</em><big>)</big><a class="headerlink" href="#cyphi.node.Node" title="Permalink to this definition">¶</a></dt>
 <dd><p>A node in a network.</p>
 <dl class="attribute">
 <dt id="cyphi.node.Node.network">
@@ -894,13 +894,6 @@ labels.</p>
 <h1>Utilities<a class="headerlink" href="#utilities" title="Permalink to this headline">¶</a></h1>
 <p>Functions used by more than one CyPhi module or class, or that might be of
 external use.</p>
-<dl class="function">
-<dt id="cyphi.utils.apply_cut">
-<tt class="descclassname">cyphi.utils.</tt><tt class="descname">apply_cut</tt><big>(</big><em>cut</em>, <em>connectivity_matrix</em><big>)</big><a class="headerlink" href="#cyphi.utils.apply_cut" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a modified connectivity matrix where the connections from one
-set of nodes to the other are destroyed.</p>
-</dd></dl>
-
 <dl class="function">
 <dt id="cyphi.utils.np_hash">
 <tt class="descclassname">cyphi.utils.</tt><tt class="descname">np_hash</tt><big>(</big><em>a</em><big>)</big><a class="headerlink" href="#cyphi.utils.np_hash" title="Permalink to this definition">¶</a></dt>
@@ -1164,7 +1157,7 @@ from any state or from a given past state.</p>
   <div role="contentinfo">
     <p>
         &copy; Copyright 2014, Will Mayner.
-      Last updated on May 19, 2014.
+      Last updated on May 29, 2014.
     </p>
   </div>
 
